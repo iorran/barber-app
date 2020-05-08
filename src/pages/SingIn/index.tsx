@@ -6,6 +6,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     TextInput,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -15,6 +16,8 @@ import { Form } from '@unform/mobile';
 import logo from 'assets/logo.png';
 import Button from 'components/Button';
 import Input from 'components/Input';
+import getValidationErrors from 'utils/getValidationErrors';
+import * as Yup from 'yup';
 
 import {
     Container,
@@ -25,13 +28,39 @@ import {
     CreateAccountButtonText,
 } from './styles';
 
+interface SignInFormData {
+    name: string;
+    email: string;
+}
+
 const SingIn: React.FC = () => {
     const navigation = useNavigation();
     const formRef = useRef<FormHandles>(null);
     const passwordInputRef = useRef<TextInput>(null);
 
-    const handleSingIn = useCallback((data) => {
-        console.log(data);
+    const handleSingIn = useCallback(async (data: SignInFormData) => {
+        try {
+            formRef.current?.setErrors({});
+            const schema = Yup.object().shape({
+                email: Yup.string()
+                    .required('Email Obrigatório')
+                    .email('Digite um email válido'),
+                password: Yup.string().required('Senha obrigatória'),
+            });
+            await schema.validate(data, {
+                abortEarly: false,
+            });
+        } catch (error) {
+            if (error instanceof Yup.ValidationError) {
+                const errors = getValidationErrors(error);
+                formRef.current?.setErrors(errors);
+            } else {
+                Alert.alert(
+                    'Ooops! Utilizador não encontrado',
+                    'Cheque suas crendencias. Não localizei os dados do meu cliente preferido :D',
+                );
+            }
+        }
     }, []);
 
     return (

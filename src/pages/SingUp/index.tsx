@@ -6,6 +6,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     TextInput,
+    Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -15,6 +16,8 @@ import { Form } from '@unform/mobile';
 import logo from 'assets/logo.png';
 import Button from 'components/Button';
 import Input from 'components/Input';
+import getValidationErrors from 'utils/getValidationErrors';
+import * as Yup from 'yup';
 
 import {
     Container,
@@ -25,15 +28,51 @@ import {
     BackToSignInText,
 } from './styles';
 
+interface SignUpFormData {
+    name: string;
+    email: string;
+    password: string;
+}
+
 const SingUp: React.FC = () => {
     const navigation = useNavigation();
     const formRef = useRef<FormHandles>(null);
     const emailInputRef = useRef<TextInput>(null);
     const passwordInputRef = useRef<TextInput>(null);
 
-    const handleSingUp = useCallback((data) => {
-        console.log(data);
-    }, []);
+    const handleSingUp = useCallback(
+        async ({ name, email, password }: SignUpFormData) => {
+            try {
+                formRef.current?.setErrors({});
+                const schema = Yup.object().shape({
+                    name: Yup.string().required('Nome Obrigatório'),
+                    email: Yup.string()
+                        .required('Email Obrigatório')
+                        .email('Digite um email válido'),
+                    password: Yup.string().min(6, 'No mínimo 6 digitos'),
+                });
+                await schema.validate(
+                    { name, email, password },
+                    {
+                        abortEarly: false,
+                    },
+                );
+
+                // await createUser({ variables: { name, email, password } });
+            } catch (error) {
+                if (error instanceof Yup.ValidationError) {
+                    const errors = getValidationErrors(error);
+                    formRef.current?.setErrors(errors);
+                } else {
+                    Alert.alert(
+                        'Ooops! Algo aconteceu.',
+                        'Estou com dificuldades para processar o seu pedido. Poderia tentar novamente?',
+                    );
+                }
+            }
+        },
+        [],
+    );
 
     return (
         <>
