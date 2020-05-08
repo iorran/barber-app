@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
     Image,
     View,
     ScrollView,
     KeyboardAvoidingView,
     Platform,
+    TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { useNavigation } from '@react-navigation/native';
+import { FormHandles } from '@unform/core';
+import { Form } from '@unform/mobile';
 import logo from 'assets/logo.png';
 import Button from 'components/Button';
 import Input from 'components/Input';
@@ -24,6 +27,14 @@ import {
 
 const SingUp: React.FC = () => {
     const navigation = useNavigation();
+    const formRef = useRef<FormHandles>(null);
+    const emailInputRef = useRef<TextInput>(null);
+    const passwordInputRef = useRef<TextInput>(null);
+
+    const handleSingUp = useCallback((data) => {
+        console.log(data);
+    }, []);
+
     return (
         <>
             <KeyboardAvoidingView
@@ -40,18 +51,50 @@ const SingUp: React.FC = () => {
                         <View>
                             <Title>Crie sua conta</Title>
                         </View>
-
-                        <Input name="name" icon="user" placeholder="Nome" />
-                        <Input name="email" icon="mail" placeholder="E-mail" />
-                        <Input name="senha" icon="lock" placeholder="Senha" />
-
-                        <Button
-                            onPress={() => {
-                                console.log(1);
-                            }}
-                        >
-                            Entrar
-                        </Button>
+                        <Form ref={formRef} onSubmit={handleSingUp}>
+                            <Input
+                                autoCapitalize="words"
+                                name="name"
+                                icon="user"
+                                placeholder="Nome"
+                                returnKeyType="next"
+                                onSubmitEditing={() => {
+                                    emailInputRef.current?.focus();
+                                }}
+                            />
+                            <Input
+                                ref={emailInputRef}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                name="email"
+                                icon="mail"
+                                placeholder="E-mail"
+                                returnKeyType="next"
+                                onSubmitEditing={() => {
+                                    passwordInputRef.current?.focus();
+                                }}
+                            />
+                            <Input
+                                ref={passwordInputRef}
+                                secureTextEntry
+                                name="senha"
+                                icon="lock"
+                                placeholder="Senha"
+                                textContentType="newPassword"
+                                returnKeyType="send"
+                                onSubmitEditing={() => {
+                                    formRef.current?.submitForm();
+                                }}
+                            />
+                            <Button
+                                onPress={() => {
+                                    formRef.current?.submitForm();
+                                }}
+                            >
+                                Entrar
+                            </Button>
+                        </Form>
 
                         <ForgotPassword onPress={() => console.log(1)}>
                             <ForgotPasswordText>
